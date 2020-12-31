@@ -34,3 +34,4 @@ RUN python -m pip install -U pip
 RUN python -m pip install .
 
 ENV TF_CPP_MIN_LOG_LEVEL 3
+WORKDIR /home/tensorflow/

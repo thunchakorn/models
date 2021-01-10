@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:2.2.0-gpu
+FROM tensorflow/tensorflow:2.4.0-gpu
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -11,7 +11,11 @@ RUN apt-get update && apt-get install -y \
     python3-pil \
     python3-lxml \
     python3-tk \
-    wget
+    wget \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    nano 
 
 # Install gcloud and gsutil commands
 # https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
@@ -20,8 +24,13 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
     apt-get update -y && apt-get install google-cloud-sdk -y
 
+# Add new user to avoid running as root
+RUN useradd -ms /bin/bash tensorflow
+USER tensorflow
+WORKDIR /home/tensorflow
+
 # Copy this version of of the model garden into the image
-COPY . /home/tensorflow/models
+COPY --chown=tensorflow . /home/tensorflow/models
 
 # Compile protobuf configs
 RUN (cd /home/tensorflow/models/research/ && protoc object_detection/protos/*.proto --python_out=.)
@@ -34,4 +43,3 @@ RUN python -m pip install -U pip
 RUN python -m pip install .
 
 ENV TF_CPP_MIN_LOG_LEVEL 3
-WORKDIR /home/tensorflow/
